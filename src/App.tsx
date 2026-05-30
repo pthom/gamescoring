@@ -10,6 +10,8 @@ import {
 import { Home } from "./components/Home";
 import { NewGame } from "./components/NewGame";
 import { Scoreboard } from "./components/Scoreboard";
+import { SharedView } from "./components/SharedView";
+import { readShareFromLocation, type SharedGame } from "./share";
 
 type View = { name: "home" } | { name: "new" } | { name: "play"; id: string };
 
@@ -17,6 +19,9 @@ export default function App() {
   const [games, setGames] = useState<Game[]>(() => loadGames());
   const [currentId, setCurrentId] = useState<string | null>(() =>
     loadCurrentId()
+  );
+  const [shared, setShared] = useState<SharedGame | null>(() =>
+    readShareFromLocation()
   );
   const [view, setView] = useState<View>(() =>
     loadCurrentId() ? { name: "play", id: loadCurrentId()! } : { name: "home" }
@@ -56,6 +61,19 @@ export default function App() {
   function openGame(id: string) {
     setCurrentId(id);
     setView({ name: "play", id });
+  }
+
+  if (shared) {
+    return (
+      <SharedView
+        game={shared}
+        onExit={() => {
+          history.replaceState(null, "", location.pathname + location.search);
+          setShared(null);
+          setView({ name: "home" });
+        }}
+      />
+    );
   }
 
   if (view.name === "new") {

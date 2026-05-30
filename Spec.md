@@ -53,6 +53,16 @@ start a game.
 - **New game** (with confirm if a game is in progress).
 - Optional: a list of past/finished games to revisit or delete.
 
+### Share (read-only) — shipped
+- From a game, **Share read-only link**: the full game state is encoded into
+  the URL hash (`#g=…`) — no backend, the data rides in the link itself.
+- A share dialog shows a **QR code** (so a friend can scan it at the table) plus
+  copy / native-share buttons.
+- Opening the link shows a **read-only snapshot** view (no editing), with a
+  badge and a note that it won't update live — re-share for the latest.
+- For very large games the link can exceed a scannable QR; above ~1200 chars
+  the dialog hides the QR and offers the link instead.
+
 ## Screens
 
 1. **Home** — resume current game, or start a new one; (later) list past games.
@@ -84,9 +94,19 @@ Store the current game under a known key; keep a list of saved games.
 
 ## Possible future enhancements
 
-- Cloud sync / shared scoreboard so each friend watches on their own phone.
 - Per-game templates and presets (default player lists, scoring shortcuts).
 - Round timer, dealer/turn tracker.
 - Stats & history across games (win counts, averages).
-- Export/share a finished game (image or link).
 - Undo/redo for edits.
+
+## Deferred / out of scope (and why)
+
+- **Real-time multi-device editing** (each friend edits the same game live from
+  their own phone). Deliberately **not built**. The core use is *in-person*
+  play, where one scorekeeper with one phone is the norm; full sync would add a
+  backend, accounts, a privacy shift (data leaving the device), and
+  offline-reconciliation complexity — high permanent cost for a small,
+  occasional benefit. The **read-only share link + QR** (above) covers the most
+  likely real want ("let everyone watch the scores") at a fraction of the cost,
+  with no backend. Revisit only if shared *editing* becomes a felt need; a
+  realtime BaaS (Supabase / Firebase) with last-write-wins would be the path.

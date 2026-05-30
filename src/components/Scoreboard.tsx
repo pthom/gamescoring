@@ -2,6 +2,9 @@ import { useState } from "react";
 import type { Game, Round } from "../types";
 import { allTotals, leaderIds } from "../scoring";
 import { uid } from "../storage";
+import { buildShareUrl } from "../share";
+import { ScoreGrid } from "./ScoreGrid";
+import { ShareDialog } from "./ShareDialog";
 
 interface Props {
   game: Game;
@@ -12,6 +15,7 @@ interface Props {
 
 export function Scoreboard({ game, onChange, onDelete, onHome }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
   const totals = allTotals(game);
   const leaders = leaderIds(game);
 
@@ -38,6 +42,11 @@ export function Scoreboard({ game, onChange, onDelete, onHome }: Props) {
     onChange({ ...game, rounds: game.rounds.filter((r) => r.id !== roundId) });
   }
 
+  function openShare() {
+    setMenuOpen(false);
+    setShareUrl(buildShareUrl(game));
+  }
+
   return (
     <div className="screen play">
       <header className="bar">
@@ -55,70 +64,33 @@ export function Scoreboard({ game, onChange, onDelete, onHome }: Props) {
       </header>
 
       {menuOpen && (
-        <div className="menu" onClick={() => setMenuOpen(false)}>
-          <button
-            className="menu-item danger"
-            onClick={() => {
-              if (confirm("Delete this game? This can't be undone.")) onDelete();
-            }}
-          >
-            Delete game
-          </button>
+        <div className="menu-backdrop" onClick={() => setMenuOpen(false)}>
+          <div className="menu" onClick={(e) => e.stopPropagation()}>
+            <button className="menu-item" onClick={openShare}>
+              Share read-only link
+            </button>
+            <button
+              className="menu-item danger"
+              onClick={() => {
+                if (confirm("Delete this game? This can't be undone."))
+                  onDelete();
+              }}
+            >
+              Delete game
+            </button>
+          </div>
         </div>
       )}
 
       <div className="grid-wrap">
-        <table className="grid">
-          <thead>
-            <tr>
-              <th className="corner">#</th>
-              {game.players.map((p) => (
-                <th
-                  key={p.id}
-                  className={leaders.has(p.id) ? "phead leader" : "phead"}
-                >
-                  <span className="pname">
-                    {leaders.has(p.id) && <span className="crown">♛ </span>}
-                    {p.name}
-                  </span>
-                  <span className="ptotal">{totals[p.id]}</span>
-                </th>
-              ))}
-              <th className="rowtools" aria-hidden="true" />
-            </tr>
-          </thead>
-          <tbody>
-            {game.rounds.map((round, i) => (
-              <tr key={round.id}>
-                <td className="rnum">{i + 1}</td>
-                {game.players.map((p) => (
-                  <td key={p.id} className="cell">
-                    <input
-                      className="score-input"
-                      type="text"
-                      inputMode="numeric"
-                      pattern="-?[0-9]*"
-                      value={round.scores[p.id] ?? ""}
-                      placeholder="–"
-                      onChange={(e) => setScore(round.id, p.id, e.target.value)}
-                      onFocus={(e) => e.target.select()}
-                    />
-                  </td>
-                ))}
-                <td className="rowtools">
-                  <button
-                    className="icon-btn danger sm"
-                    aria-label={`Delete round ${i + 1}`}
-                    onClick={() => deleteRound(round.id)}
-                  >
-                    ✕
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
+        <ScoreGrid
+          players={game.players}
+          rounds={game.rounds}
+          totals={totals}
+          leaders={leaders}
+          onScore={setScore}
+          onDeleteRound={deleteRound}
+        />
         {game.rounds.length === 0 && (
           <p className="empty">No rounds yet. Add the first round to begin.</p>
         )}
@@ -129,6 +101,14 @@ export function Scoreboard({ game, onChange, onDelete, onHome }: Props) {
           + Add round
         </button>
       </div>
+
+      {shareUrl && (
+        <ShareDialog
+          url={shareUrl}
+          title={game.name || "Score Sheet"}
+          onClose={() => setShareUrl(null)}
+        />
+      )}
     </div>
   );
 }

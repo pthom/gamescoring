@@ -420,7 +420,7 @@ body {
 }
 
 /* ---------- Menu ---------- */
-.menu {
+.menu-backdrop {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.4);
@@ -430,6 +430,12 @@ body {
   padding: 64px 16px;
   z-index: 10;
 }
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+}
 .menu-item {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -437,8 +443,101 @@ body {
   padding: 14px 20px;
   font-size: 16px;
   font-weight: 600;
+  color: var(--text);
+  text-align: left;
   cursor: pointer;
 }
 .menu-item.danger {
   color: var(--danger);
+}
+
+/* ---------- Shared / read-only view ---------- */
+.badge {
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 6px 10px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.snapshot-note {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.4;
+}
+.score-static {
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+  padding: 14px 6px;
+}
+
+/* ---------- Share dialog ---------- */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 20;
+}
+.dialog {
+  width: 100%;
+  max-width: 360px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 22px;
+  text-align: center;
+}
+.dialog-title {
+  margin: 0 0 16px;
+  font-size: 18px;
+}
+.qr-box {
+  background: #fff;
+  border-radius: 14px;
+  padding: 14px;
+  display: inline-flex;
+  margin-bottom: 14px;
+}
+.dialog-note {
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.45;
+  margin: 0 0 14px;
+}
+.dialog-url {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: var(--muted);
+  word-break: break-all;
+  max-height: 64px;
+  overflow-y: auto;
+  text-align: left;
+  margin-bottom: 16px;
+}
+.dialog-actions {
+  display: flex;
+  gap: 10px;
+}
+.dialog-actions .btn {
+  flex: 1;
+}
+.dialog-close {
+  margin-top: 6px;
 }
