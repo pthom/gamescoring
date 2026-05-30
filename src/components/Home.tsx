@@ -1,5 +1,6 @@
 import type { Game } from "../types";
 import { allTotals } from "../scoring";
+import { relativeTime } from "../format";
 
 interface Props {
   games: Game[];
@@ -12,7 +13,10 @@ interface Props {
 function summary(game: Game): string {
   const names = game.players.map((p) => p.name).join(", ");
   const rounds = game.rounds.length;
-  return `${names} · ${rounds} round${rounds === 1 ? "" : "s"}`;
+  const parts = [names, `${rounds} round${rounds === 1 ? "" : "s"}`];
+  parts.push(relativeTime(game.updatedAt));
+  if (game.finished) parts.push("ended");
+  return parts.join(" · ");
 }
 
 function topScore(game: Game): string {

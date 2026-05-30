@@ -63,6 +63,17 @@ export default function App() {
     setView({ name: "play", id });
   }
 
+  function handleRematch(from: Game) {
+    const fresh = createGame(
+      from.name,
+      from.winnerRule,
+      from.players.map((p) => p.name)
+    );
+    upsertGame(fresh);
+    setCurrentId(fresh.id);
+    setView({ name: "play", id: fresh.id });
+  }
+
   if (shared) {
     return (
       <SharedView
@@ -89,6 +100,7 @@ export default function App() {
         onChange={upsertGame}
         onDelete={() => handleDelete(game.id)}
         onHome={() => setView({ name: "home" })}
+        onRematch={() => handleRematch(game)}
       />
     );
   }

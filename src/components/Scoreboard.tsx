@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Game, Round } from "../types";
 import { allTotals, leaderIds } from "../scoring";
 import { uid } from "../storage";
@@ -11,17 +11,38 @@ interface Props {
   onChange: (game: Game) => void;
   onDelete: () => void;
   onHome: () => void;
+  onRematch: () => void;
 }
 
-export function Scoreboard({ game, onChange, onDelete, onHome }: Props) {
+export function Scoreboard({
+  game,
+  onChange,
+  onDelete,
+  onHome,
+  onRematch,
+}: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const gridWrap = useRef<HTMLDivElement>(null);
+  const justAdded = useRef(false);
   const totals = allTotals(game);
   const leaders = leaderIds(game);
+  const finished = game.finished;
+
+  // After adding a round, focus its first cell and scroll it into view.
+  useEffect(() => {
+    if (!justAdded.current) return;
+    justAdded.current = false;
+    const rows = gridWrap.current?.querySelectorAll("tbody tr");
+    const last = rows?.[rows.length - 1];
+    last?.scrollIntoView({ block: "nearest" });
+    last?.querySelector<HTMLInputElement>("input.score-input")?.focus();
+  }, [game.rounds.length]);
 
   function addRound() {
     const round: Round = { id: uid(), scores: {} };
     for (const p of game.players) round.scores[p.id] = null;
+    justAdded.current = true;
     onChange({ ...game, rounds: [...game.rounds, round] });
   }
 
@@ -39,12 +60,33 @@ export function Scoreboard({ game, onChange, onDelete, onHome }: Props) {
   }
 
   function deleteRound(roundId: string) {
+    const n = game.rounds.findIndex((r) => r.id === roundId) + 1;
+    if (!confirm(`Delete round ${n}?`)) return;
     onChange({ ...game, rounds: game.rounds.filter((r) => r.id !== roundId) });
+  }
+
+  function endGame() {
+    setMenuOpen(false);
+    onChange({ ...game, finished: true });
+  }
+
+  function continueGame() {
+    onChange({ ...game, finished: false });
   }
 
   function openShare() {
     setMenuOpen(false);
     setShareUrl(buildShareUrl(game));
+  }
+
+  const winnerNames = game.players
+    .filter((p) => leaders.has(p.id))
+    .map((p) => p.name);
+  let resultText = "Game ended";
+  if (winnerNames.length === 1) {
+    resultText = `🏆 ${winnerNames[0]} wins · ${totals[game.players.find((p) => p.name === winnerNames[0])!.id]}`;
+  } else if (winnerNames.length > 1) {
+    resultText = `Tie · ${winnerNames.join(", ")}`;
   }
 
   return (
@@ -53,7 +95,10 @@ export function Scoreboard({ game, onChange, onDelete, onHome }: Props) {
         <button className="link" onClick={onHome}>
           ‹ Games
         </button>
-        <h1 className="bar-title">{game.name || "Game"}</h1>
+        <h1 className="bar-title">
+          {game.name || "Game"}
+          {finished && <span className="badge ended-badge"> ended</span>}
+        </h1>
         <button
           className="icon-btn"
           aria-label="Menu"
@@ -69,6 +114,11 @@ export function Scoreboard({ game, onChange, onDelete, onHome }: Props) {
             <button className="menu-item" onClick={openShare}>
               Share read-only link
             </button>
+            {!finished && (
+              <button className="menu-item" onClick={endGame}>
+                End game
+              </button>
+            )}
             <button
               className="menu-item danger"
               onClick={() => {
@@ -82,14 +132,16 @@ export function Scoreboard({ game, onChange, onDelete, onHome }: Props) {
         </div>
       )}
 
-      <div className="grid-wrap">
+      {finished && <div className="result-banner">{resultText}</div>}
+
+      <div className="grid-wrap" ref={gridWrap}>
         <ScoreGrid
           players={game.players}
           rounds={game.rounds}
           totals={totals}
           leaders={leaders}
-          onScore={setScore}
-          onDeleteRound={deleteRound}
+          onScore={finished ? undefined : setScore}
+          onDeleteRound={finished ? undefined : deleteRound}
         />
         {game.rounds.length === 0 && (
           <p className="empty">No rounds yet. Add the first round to begin.</p>
@@ -97,9 +149,20 @@ export function Scoreboard({ game, onChange, onDelete, onHome }: Props) {
       </div>
 
       <div className="play-actions">
-        <button className="btn btn-primary btn-block" onClick={addRound}>
-          + Add round
-        </button>
+        {finished ? (
+          <div className="action-row">
+            <button className="btn btn-ghost" onClick={continueGame}>
+              Continue
+            </button>
+            <button className="btn btn-primary" onClick={onRematch}>
+              Rematch
+            </button>
+          </div>
+        ) : (
+          <button className="btn btn-primary btn-block" onClick={addRound}>
+            + Add round
+          </button>
+        )}
       </div>
 
       {shareUrl && (
