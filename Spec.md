@@ -51,7 +51,17 @@ start a game.
 - **Save** automatically and continuously to the device (localStorage).
 - Resume the in-progress game on reopen.
 - **New game** (with confirm if a game is in progress).
-- Optional: a list of past/finished games to revisit or delete.
+- A list of past games to revisit or delete; most recently edited first, each
+  showing players, round count, and a relative "edited" time.
+- **End game** — locks the game read-only and shows a winner (or tie) banner.
+  **Continue** reopens it for editing; **Rematch** starts a fresh game with the
+  same players and winner rule.
+
+### Turn stopwatch — shipped
+- An **optional**, hideable mm:ss stopwatch (start / pause / reset) for timing a
+  turn. Off by default; toggled from the menu, preference remembered.
+- Fully manual and **not** part of the saved game — it's a scratch timer and
+  resets on reload. Not tied to players or rounds.
 
 ### Share (read-only) — shipped
 - From a game, **Share read-only link**: the full game state is encoded into
@@ -65,9 +75,11 @@ start a game.
 
 ## Screens
 
-1. **Home** — resume current game, or start a new one; (later) list past games.
+1. **Home** — resume current game, start a new one, or reopen/delete past games.
 2. **New game** — name, winner rule, players.
-3. **Scoreboard** — the grid; add round, edit cells, see totals & leader.
+3. **Scoreboard** — the grid; add round, edit cells, see totals & leader;
+   share, end/continue, optional stopwatch.
+4. **Shared view** — read-only snapshot opened from a share link.
 
 ## Data model (localStorage)
 
@@ -78,9 +90,14 @@ Game {
   winnerRule: "highest" | "lowest"
   players: { id, name }[]
   rounds: { id, scores: { [playerId]: number | null } }[]
+  finished: boolean            // ended -> read-only
   createdAt, updatedAt
 }
 ```
+
+A share link encodes a compact, UUID-free copy of one game (name, rule,
+player names, and a rounds×players score matrix) into the URL hash; it is not
+stored server-side.
 
 Store the current game under a known key; keep a list of saved games.
 
@@ -95,7 +112,9 @@ Store the current game under a known key; keep a list of saved games.
 ## Possible future enhancements
 
 - Per-game templates and presets (default player lists, scoring shortcuts).
-- Round timer, dealer/turn tracker.
+- Per-round date + duration (parked — needs a clear definition of "duration"
+  and a layout that doesn't clutter the grid on mobile).
+- Dealer / turn tracker (active-player concept); a per-player chess clock.
 - Stats & history across games (win counts, averages).
 - Undo/redo for edits.
 

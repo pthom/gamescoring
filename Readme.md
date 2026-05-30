@@ -15,17 +15,26 @@ Open it on your phone and "Add to Home Screen" to install it like a native app
 ## Features
 
 - **Any number of players** — one column each, with live running totals.
+  The header row and round-number column stay pinned as you scroll.
 - **Round-based scoring** — a grid of rounds × players; works for Scrabble
   turns and card-game hands alike.
 - **Configurable winner rule** — highest-wins (Scrabble) or lowest-wins
   (Golf, Hearts…); the current leader is highlighted with a ♛.
-- **Edit anything** — fix a mistyped cell, delete a round; totals recompute
-  instantly. Negative numbers allowed; blank counts as 0.
+- **Edit anything** — fix a mistyped cell, delete a round (with confirm);
+  totals recompute instantly. Negative numbers allowed; blank counts as 0.
+- **End game & rematch** — end a game to lock it read-only with a winner
+  banner; *Continue* to reopen, or *Rematch* to start fresh with the same
+  players and rule.
+- **Share read-only** — generate a link (with a **QR code**) that opens a
+  read-only snapshot of the scores on anyone's phone. No backend — the game
+  state rides in the link itself.
+- **Optional turn stopwatch** — a hideable mm:ss timer for timing a turn.
 - **Auto-saved** — games persist in the browser (localStorage) and resume
   where you left off, even after closing the tab.
 - **Installable PWA** — add to your home screen; works offline.
 
-No backend, no login, no data leaves your device.
+No backend, no login, no data leaves your device (a share link carries only
+that one game's scores, and only when you choose to share it).
 
 ## Tech stack
 
@@ -33,6 +42,9 @@ No backend, no login, no data leaves your device.
 - [Vite](https://vite.dev) for builds and dev server
 - [vite-plugin-pwa](https://vite-pwa-org.netlify.app) for the manifest +
   service worker
+- [qrcode.react](https://github.com/zpao/qrcode.react) for share QR codes
+- [@resvg/resvg-js](https://github.com/yisibl/resvg-js) to rasterize the SVG
+  icon into PNGs (build-time only)
 - Deployed on [Vercel](https://vercel.com)
 
 ## Run locally
@@ -48,6 +60,7 @@ npm run dev -- --host  # also expose on your local network (for phones)
 ```bash
 npm run build        # type-check + production build into dist/
 npm run preview      # preview the production build locally
+npm run icons        # regenerate PNG app icons from the SVGs in public/
 npx vercel --prod    # deploy to production (Vercel)
 ```
 
@@ -57,14 +70,22 @@ npx vercel --prod    # deploy to production (Vercel)
 src/
   types.ts             # Game / Player / Round models
   storage.ts           # localStorage persistence + game creation
-  scoring.ts           # totals & leader computation
+  scoring.ts           # totals & leader computation (structural)
+  share.ts             # encode/decode game state to/from a share link
+  format.ts            # relative-time formatting
   App.tsx              # view routing + state
   components/
     Home.tsx           # resume / new game / saved games
     NewGame.tsx        # name, winner rule, players
-    Scoreboard.tsx     # the scoring grid
+    Scoreboard.tsx     # the scoring grid + menu/actions
+    ScoreGrid.tsx      # presentational grid (editable & read-only)
+    ShareDialog.tsx    # QR code + copy / native share
+    SharedView.tsx     # read-only snapshot from a share link
+    Stopwatch.tsx      # optional turn timer
   styles.css
-public/                # PWA icons
+scripts/
+  gen-icons.mjs        # SVG -> PNG icon generation
+public/                # PWA icons (SVG sources + generated PNGs)
 ```
 
 See [Spec.md](Spec.md) for the full design notes.
