@@ -395,6 +395,27 @@ body {
 
 .cell {
   padding: 0;
+  position: relative;
+}
+.sign-btn {
+  position: absolute;
+  left: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 7px;
+  background: var(--surface-2);
+  color: var(--accent);
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  cursor: pointer;
 }
 .score-input {
   width: 100%;

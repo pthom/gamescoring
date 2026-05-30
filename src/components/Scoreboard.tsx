@@ -67,6 +67,17 @@ export function Scoreboard({
     onChange({ ...game, rounds: game.rounds.filter((r) => r.id !== roundId) });
   }
 
+  function toggleSign(roundId: string, playerId: string) {
+    onChange({
+      ...game,
+      rounds: game.rounds.map((r) => {
+        if (r.id !== roundId) return r;
+        const v = r.scores[playerId];
+        return v == null ? r : { ...r, scores: { ...r.scores, [playerId]: -v } };
+      }),
+    });
+  }
+
   function renamePlayer(playerId: string, name: string) {
     onChange({
       ...game,
@@ -189,6 +200,7 @@ export function Scoreboard({
           onScore={finished ? undefined : setScore}
           onDeleteRound={finished ? undefined : deleteRound}
           onRenamePlayer={finished ? undefined : renamePlayer}
+          onToggleSign={finished ? undefined : toggleSign}
         />
         {game.rounds.length === 0 && (
           <p className="empty">No rounds yet. Add the first round to begin.</p>

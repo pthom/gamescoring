@@ -19,6 +19,8 @@ interface Props {
   onDeleteRound?: (roundId: string) => void;
   /** When provided, tapping a player's name lets you rename them. */
   onRenamePlayer?: (playerId: string, name: string) => void;
+  /** When provided, a ± button on the focused cell flips that score's sign. */
+  onToggleSign?: (roundId: string, playerId: string) => void;
 }
 
 export function ScoreGrid({
@@ -29,10 +31,12 @@ export function ScoreGrid({
   onScore,
   onDeleteRound,
   onRenamePlayer,
+  onToggleSign,
 }: Props) {
   const editable = !!onScore;
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
+  const [focusedCell, setFocusedCell] = useState<string | null>(null);
 
   function startEdit(p: Player) {
     if (!onRenamePlayer) return;
@@ -93,26 +97,48 @@ export function ScoreGrid({
         {rounds.map((round, i) => (
           <tr key={round.id}>
             <td className="rnum">{i + 1}</td>
-            {players.map((p) => (
-              <td key={p.id} className="cell">
-                {editable ? (
-                  <input
-                    className="score-input"
-                    type="text"
-                    inputMode="numeric"
-                    pattern="-?[0-9]*"
-                    value={round.scores[p.id] ?? ""}
-                    placeholder="–"
-                    onChange={(e) => onScore!(round.id, p.id, e.target.value)}
-                    onFocus={(e) => e.target.select()}
-                  />
-                ) : (
-                  <span className="score-static">
-                    {round.scores[p.id] ?? "–"}
-                  </span>
-                )}
-              </td>
-            ))}
+            {players.map((p) => {
+              const key = `${round.id}:${p.id}`;
+              return (
+                <td key={p.id} className="cell">
+                  {editable ? (
+                    <>
+                      {onToggleSign && focusedCell === key && (
+                        <button
+                          className="sign-btn"
+                          aria-label="Toggle sign"
+                          // keep the input focused (and the keypad open)
+                          onPointerDown={(e) => e.preventDefault()}
+                          onClick={() => onToggleSign(round.id, p.id)}
+                        >
+                          ±
+                        </button>
+                      )}
+                      <input
+                        className="score-input"
+                        type="text"
+                        inputMode="numeric"
+                        pattern="-?[0-9]*"
+                        value={round.scores[p.id] ?? ""}
+                        placeholder="–"
+                        onChange={(e) => onScore!(round.id, p.id, e.target.value)}
+                        onFocus={(e) => {
+                          setFocusedCell(key);
+                          e.target.select();
+                        }}
+                        onBlur={() =>
+                          setFocusedCell((c) => (c === key ? null : c))
+                        }
+                      />
+                    </>
+                  ) : (
+                    <span className="score-static">
+                      {round.scores[p.id] ?? "–"}
+                    </span>
+                  )}
+                </td>
+              );
+            })}
             {onDeleteRound && (
               <td className="rowtools">
                 <button
