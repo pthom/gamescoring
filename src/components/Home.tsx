@@ -30,8 +30,10 @@ export function Home({ games, currentId, onNew, onOpen, onDelete }: Props) {
   return (
     <div className="screen">
       <header className="app-header">
-        <h1>GameScoring</h1>
-        <p className="tagline">Scores for Scrabble &amp; card games</p>
+        <h1>
+          Score Sheet <span className="note">♪</span>
+        </h1>
+        <p className="tagline">Keep score in perfect harmony</p>
       </header>
 
       {current && (

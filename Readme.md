@@ -1,8 +1,8 @@
-# GameScoring
+# Score Sheet ♪
 
 A simple, mobile-friendly web app for keeping score when playing **Scrabble**
-or **card games** with friends. No accounts, no setup — open it on your phone
-and start a game.
+or **card games** with friends — a *score sheet* in both senses. No accounts,
+no setup; open it on your phone and start a game.
 
 ### 🎲 Live app: **https://gamescoring.vercel.app**
 

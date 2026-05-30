@@ -9,9 +9,9 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "icon.svg"],
       manifest: {
-        name: "GameScoring",
-        short_name: "Scores",
-        description: "Keep score for Scrabble and card games.",
+        name: "Score Sheet",
+        short_name: "Score Sheet",
+        description: "Keep score for Scrabble and card games — in perfect harmony.",
         theme_color: "#0f172a",
         background_color: "#0f172a",
         display: "standalone",

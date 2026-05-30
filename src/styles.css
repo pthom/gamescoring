@@ -54,6 +54,9 @@ body {
   font-size: 28px;
   letter-spacing: -0.02em;
 }
+.app-header .note {
+  color: var(--accent);
+}
 .tagline {
   margin: 4px 0 0;
   color: var(--muted);
