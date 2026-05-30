@@ -434,6 +434,33 @@ body {
   vertical-align: middle;
   margin-left: 6px;
 }
+
+/* ---------- Turn stopwatch ---------- */
+.timer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 8px 8px 8px 14px;
+  margin-top: 12px;
+}
+.timer-clock {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 22px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+}
+.timer-clock.running {
+  color: var(--accent);
+}
+.timer-controls {
+  display: flex;
+  gap: 8px;
+}
 .result-banner {
   background: linear-gradient(135deg, var(--accent), #7dd3fc);
   color: var(--accent-ink);

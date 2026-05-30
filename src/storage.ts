@@ -38,6 +38,16 @@ export function saveCurrentId(id: string | null): void {
   else localStorage.removeItem(CURRENT_KEY);
 }
 
+const TIMER_KEY = "gamescoring.timerVisible";
+
+export function loadTimerVisible(): boolean {
+  return localStorage.getItem(TIMER_KEY) === "1";
+}
+
+export function saveTimerVisible(visible: boolean): void {
+  localStorage.setItem(TIMER_KEY, visible ? "1" : "0");
+}
+
 export function createGame(
   name: string,
   winnerRule: WinnerRule,

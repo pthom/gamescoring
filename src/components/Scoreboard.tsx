@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import type { Game, Round } from "../types";
 import { allTotals, leaderIds } from "../scoring";
-import { uid } from "../storage";
+import { uid, loadTimerVisible, saveTimerVisible } from "../storage";
 import { buildShareUrl } from "../share";
 import { ScoreGrid } from "./ScoreGrid";
 import { ShareDialog } from "./ShareDialog";
+import { Stopwatch } from "./Stopwatch";
 
 interface Props {
   game: Game;
@@ -23,6 +24,7 @@ export function Scoreboard({
 }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [showTimer, setShowTimer] = useState(() => loadTimerVisible());
   const gridWrap = useRef<HTMLDivElement>(null);
   const justAdded = useRef(false);
   const totals = allTotals(game);
@@ -79,6 +81,14 @@ export function Scoreboard({
     setShareUrl(buildShareUrl(game));
   }
 
+  function toggleTimer() {
+    setMenuOpen(false);
+    setShowTimer((v) => {
+      saveTimerVisible(!v);
+      return !v;
+    });
+  }
+
   const winnerNames = game.players
     .filter((p) => leaders.has(p.id))
     .map((p) => p.name);
@@ -115,6 +125,11 @@ export function Scoreboard({
               Share read-only link
             </button>
             {!finished && (
+              <button className="menu-item" onClick={toggleTimer}>
+                {showTimer ? "Hide timer" : "Show timer"}
+              </button>
+            )}
+            {!finished && (
               <button className="menu-item" onClick={endGame}>
                 End game
               </button>
@@ -147,6 +162,8 @@ export function Scoreboard({
           <p className="empty">No rounds yet. Add the first round to begin.</p>
         )}
       </div>
+
+      {showTimer && !finished && <Stopwatch />}
 
       <div className="play-actions">
         {finished ? (
