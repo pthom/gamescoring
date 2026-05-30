@@ -67,6 +67,15 @@ export function Scoreboard({
     onChange({ ...game, rounds: game.rounds.filter((r) => r.id !== roundId) });
   }
 
+  function renamePlayer(playerId: string, name: string) {
+    onChange({
+      ...game,
+      players: game.players.map((p) =>
+        p.id === playerId ? { ...p, name } : p
+      ),
+    });
+  }
+
   function endGame() {
     setMenuOpen(false);
     onChange({ ...game, finished: true });
@@ -89,14 +98,23 @@ export function Scoreboard({
     });
   }
 
-  const winnerNames = game.players
-    .filter((p) => leaders.has(p.id))
-    .map((p) => p.name);
-  let resultText = "Game ended";
-  if (winnerNames.length === 1) {
-    resultText = `🏆 ${winnerNames[0]} wins · ${totals[game.players.find((p) => p.name === winnerNames[0])!.id]}`;
-  } else if (winnerNames.length > 1) {
-    resultText = `Tie · ${winnerNames.join(", ")}`;
+  // Ranked standings for the end screen (ties share a rank).
+  const ranked = game.players
+    .map((p) => ({ id: p.id, name: p.name, total: totals[p.id] }))
+    .sort((a, b) =>
+      game.winnerRule === "highest" ? b.total - a.total : a.total - b.total
+    )
+    .map((s, i, arr) => ({
+      ...s,
+      rank: i > 0 && arr[i - 1].total === s.total ? -1 : i + 1,
+    }))
+    .map((s, i, arr) => ({
+      ...s,
+      rank: s.rank === -1 ? arr[i - 1].rank : s.rank,
+    }));
+
+  function medal(rank: number): string {
+    return rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `${rank}`;
   }
 
   return (
@@ -147,7 +165,20 @@ export function Scoreboard({
         </div>
       )}
 
-      {finished && <div className="result-banner">{resultText}</div>}
+      {finished && (
+        <ol className="standings">
+          {ranked.map((s) => (
+            <li
+              key={s.id}
+              className={s.rank === 1 ? "standing first" : "standing"}
+            >
+              <span className="rank">{medal(s.rank)}</span>
+              <span className="sname">{s.name}</span>
+              <span className="stotal">{s.total}</span>
+            </li>
+          ))}
+        </ol>
+      )}
 
       <div className="grid-wrap" ref={gridWrap}>
         <ScoreGrid
@@ -157,6 +188,7 @@ export function Scoreboard({
           leaders={leaders}
           onScore={finished ? undefined : setScore}
           onDeleteRound={finished ? undefined : deleteRound}
+          onRenamePlayer={finished ? undefined : renamePlayer}
         />
         {game.rounds.length === 0 && (
           <p className="empty">No rounds yet. Add the first round to begin.</p>

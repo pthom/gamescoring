@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 interface Player {
   id: string;
   name: string;
@@ -15,6 +17,8 @@ interface Props {
   /** When provided, cells are editable and a per-row delete control shows. */
   onScore?: (roundId: string, playerId: string, raw: string) => void;
   onDeleteRound?: (roundId: string) => void;
+  /** When provided, tapping a player's name lets you rename them. */
+  onRenamePlayer?: (playerId: string, name: string) => void;
 }
 
 export function ScoreGrid({
@@ -24,8 +28,24 @@ export function ScoreGrid({
   leaders,
   onScore,
   onDeleteRound,
+  onRenamePlayer,
 }: Props) {
   const editable = !!onScore;
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+
+  function startEdit(p: Player) {
+    if (!onRenamePlayer) return;
+    setEditingId(p.id);
+    setDraft(p.name);
+  }
+
+  function commit() {
+    if (editingId && onRenamePlayer && draft.trim()) {
+      onRenamePlayer(editingId, draft.trim());
+    }
+    setEditingId(null);
+  }
 
   return (
     <table className="grid">
@@ -39,7 +59,29 @@ export function ScoreGrid({
             >
               <span className="pname">
                 {leaders.has(p.id) && <span className="crown">♛ </span>}
-                {p.name}
+                {editingId === p.id ? (
+                  <input
+                    className="pname-input"
+                    value={draft}
+                    autoFocus
+                    onChange={(e) => setDraft(e.target.value)}
+                    onBlur={commit}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") e.currentTarget.blur();
+                      else if (e.key === "Escape") setEditingId(null);
+                    }}
+                  />
+                ) : onRenamePlayer ? (
+                  <button
+                    className="pname-btn"
+                    onClick={() => startEdit(p)}
+                    title="Tap to rename"
+                  >
+                    {p.name}
+                  </button>
+                ) : (
+                  p.name
+                )}
               </span>
               <span className="ptotal">{totals[p.id]}</span>
             </th>
