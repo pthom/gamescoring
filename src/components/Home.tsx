@@ -34,8 +34,15 @@ export function Home({ games, currentId, onNew, onOpen, onDelete }: Props) {
   return (
     <div className="screen">
       <header className="app-header">
-        <h1>
-          Score Sheet <span className="note">♪</span>
+        <h1 className="app-title">
+          <span>Score Sheet</span>
+          <img
+            className="app-logo"
+            src="/icon.svg"
+            alt="Score Sheet logo"
+            width="46"
+            height="46"
+          />
         </h1>
         <p className="tagline">Keep score in perfect harmony</p>
       </header>
