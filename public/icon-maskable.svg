@@ -1,18 +1,29 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <rect width="512" height="512" fill="#0f172a"/>
-  <!-- content kept within the central ~64% safe zone for maskable cropping -->
-  <g transform="translate(256 256) scale(0.62) translate(-256 -256)">
-    <g stroke="#334155" stroke-width="12" stroke-linecap="round">
-      <line x1="104" y1="168" x2="408" y2="168"/>
-      <line x1="104" y1="232" x2="408" y2="232"/>
-      <line x1="104" y1="296" x2="408" y2="296"/>
-      <line x1="104" y1="360" x2="408" y2="360"/>
+  <!-- same artwork, centered and scaled into the maskable safe zone -->
+  <g transform="translate(256 256) scale(0.8) translate(-258 -224)">
+    <g stroke="#334155" stroke-width="7" stroke-linecap="round">
+      <line x1="60" y1="150" x2="452" y2="150"/>
+      <line x1="60" y1="204" x2="452" y2="204"/>
+      <line x1="60" y1="258" x2="452" y2="258"/>
+      <line x1="60" y1="312" x2="452" y2="312"/>
+      <line x1="60" y1="366" x2="452" y2="366"/>
     </g>
     <g fill="#38bdf8">
-      <ellipse cx="196" cy="356" rx="52" ry="40" transform="rotate(-20 196 356)"/>
-      <rect x="236" y="150" width="16" height="206" rx="8"/>
-      <path d="M252 150 q70 22 70 92 q0 26 -18 44 q14 -30 -6 -58 q-18 -24 -46 -34 z"/>
+      <rect x="170" y="160" width="14" height="173" rx="7"/>
+      <rect x="270" y="140" width="14" height="85" rx="7"/>
+      <polygon points="170,158 284,138 284,164 170,184"/>
+      <ellipse cx="150" cy="339" rx="34" ry="26" transform="rotate(-18 150 339)"/>
+      <ellipse cx="250" cy="231" rx="34" ry="26" transform="rotate(-18 250 231)"/>
     </g>
-    <text x="356" y="212" font-family="Arial, sans-serif" font-size="68" font-weight="800" fill="#facc15" text-anchor="middle">21</text>
+    <circle cx="370" cy="176" r="90" fill="#facc15"/>
+    <g transform="translate(315 121)" fill="#0f172a">
+      <path d="M28 20 H72 L69 35 C66 51 59 58 50 58 C41 58 34 51 31 35 Z"/>
+      <path d="M30 23 C13 23 13 45 33 47" fill="none" stroke="#0f172a" stroke-width="6" stroke-linecap="round"/>
+      <path d="M70 23 C87 23 87 45 67 47" fill="none" stroke="#0f172a" stroke-width="6" stroke-linecap="round"/>
+      <rect x="46" y="57" width="8" height="11"/>
+      <path d="M39 68 H61 L65 79 H35 Z"/>
+      <rect x="31" y="79" width="38" height="7" rx="2"/>
+    </g>
   </g>
 </svg>
