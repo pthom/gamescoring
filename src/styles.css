@@ -731,18 +731,28 @@ body {
   margin: 0 0 14px;
 }
 .dialog-url {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  resize: none;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px 12px;
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 11px;
-  color: var(--muted);
+  line-height: 1.4;
+  color: var(--text);
   word-break: break-all;
-  max-height: 64px;
-  overflow-y: auto;
   text-align: left;
   margin-bottom: 16px;
+}
+.dialog-url:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.manual-hint {
+  margin-top: -8px;
 }
 .dialog-actions {
   display: flex;
