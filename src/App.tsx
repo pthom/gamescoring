@@ -30,6 +30,17 @@ export default function App() {
   useEffect(() => saveGames(games), [games]);
   useEffect(() => saveCurrentId(currentId), [currentId]);
 
+  // A scanned link may land on an already-open tab/PWA, which only changes the
+  // hash (no reload). Re-read it so the shared game shows without a manual reload.
+  useEffect(() => {
+    function onHashChange() {
+      const s = readShareFromLocation();
+      if (s) setShared(s);
+    }
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
+
   function upsertGame(updated: Game) {
     updated.updatedAt = Date.now();
     setGames((prev) => {
