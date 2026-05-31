@@ -14,6 +14,7 @@ interface Props {
   onDelete: () => void;
   onHome: () => void;
   onRematch: () => void;
+  onFork: () => void;
 }
 
 export function Scoreboard({
@@ -22,16 +23,21 @@ export function Scoreboard({
   onDelete,
   onHome,
   onRematch,
+  onFork,
 }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
   const [notesOpen, setNotesOpen] = useState(false);
   const [showTimer, setShowTimer] = useState(() => loadTimerVisible());
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState("");
   const gridWrap = useRef<HTMLDivElement>(null);
   const justAdded = useRef(false);
   const totals = allTotals(game);
   const leaders = leaderIds(game);
   const finished = game.finished;
+  const isViewer = game.role === "viewer";
+  const readOnly = finished || isViewer;
 
   // After adding a round, focus its first cell and scroll it into view.
   useEffect(() => {
@@ -89,6 +95,18 @@ export function Scoreboard({
     });
   }
 
+  function startTitleEdit() {
+    if (isViewer) return;
+    setTitleDraft(game.name);
+    setEditingTitle(true);
+  }
+
+  function commitTitle() {
+    const n = titleDraft.trim();
+    if (n) onChange({ ...game, name: n });
+    setEditingTitle(false);
+  }
+
   function endGame() {
     setMenuOpen(false);
     onChange({ ...game, finished: true });
@@ -101,6 +119,11 @@ export function Scoreboard({
   function openShare() {
     setMenuOpen(false);
     setShareUrl(buildShareUrl(game));
+  }
+
+  function fork() {
+    setMenuOpen(false);
+    onFork();
   }
 
   function toggleTimer() {
@@ -136,10 +159,32 @@ export function Scoreboard({
         <button className="link" onClick={onHome}>
           ‹ Games
         </button>
-        <h1 className="bar-title">
-          {game.name || "Game"}
-          {finished && <span className="badge ended-badge"> ended</span>}
-        </h1>
+        {editingTitle ? (
+          <input
+            className="title-input"
+            value={titleDraft}
+            autoFocus
+            onChange={(e) => setTitleDraft(e.target.value)}
+            onBlur={commitTitle}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") e.currentTarget.blur();
+              else if (e.key === "Escape") setEditingTitle(false);
+            }}
+          />
+        ) : (
+          <button
+            className="bar-title bar-title-btn"
+            onClick={startTitleEdit}
+            disabled={isViewer}
+          >
+            {game.name || (isViewer ? "Shared game" : "Game")}
+            {isViewer ? (
+              <span className="badge ended-badge"> view only</span>
+            ) : finished ? (
+              <span className="badge ended-badge"> ended</span>
+            ) : null}
+          </button>
+        )}
         <button
           className="icon-btn"
           aria-label="Menu"
@@ -155,23 +200,30 @@ export function Scoreboard({
             <button className="menu-item" onClick={openShare}>
               Share read-only link
             </button>
-            <button
-              className="menu-item"
-              onClick={() => {
-                setMenuOpen(false);
-                setNotesOpen(true);
-              }}
-            >
-              {game.notes ? "Edit notes" : "Add notes"}
-            </button>
-            {!finished && (
+            {!isViewer && (
+              <button
+                className="menu-item"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setNotesOpen(true);
+                }}
+              >
+                {game.notes ? "Edit notes" : "Add notes"}
+              </button>
+            )}
+            {!readOnly && (
               <button className="menu-item" onClick={toggleTimer}>
                 {showTimer ? "Hide timer" : "Show timer"}
               </button>
             )}
-            {!finished && (
+            {!isViewer && !finished && (
               <button className="menu-item" onClick={endGame}>
                 End game
+              </button>
+            )}
+            {!isViewer && (
+              <button className="menu-item" onClick={fork}>
+                Copy to a new game
               </button>
             )}
             <button
@@ -187,11 +239,14 @@ export function Scoreboard({
         </div>
       )}
 
-      {game.notes && (
-        <button className="game-note" onClick={() => setNotesOpen(true)}>
-          📝 {game.notes}
-        </button>
-      )}
+      {game.notes &&
+        (isViewer ? (
+          <div className="shared-note">📝 {game.notes}</div>
+        ) : (
+          <button className="game-note" onClick={() => setNotesOpen(true)}>
+            📝 {game.notes}
+          </button>
+        ))}
 
       {finished && (
         <ol className="standings">
@@ -214,20 +269,28 @@ export function Scoreboard({
           rounds={game.rounds}
           totals={totals}
           leaders={leaders}
-          onScore={finished ? undefined : setScore}
-          onDeleteRound={finished ? undefined : deleteRound}
-          onRenamePlayer={finished ? undefined : renamePlayer}
-          onToggleSign={finished ? undefined : toggleSign}
+          onScore={readOnly ? undefined : setScore}
+          onDeleteRound={readOnly ? undefined : deleteRound}
+          onRenamePlayer={readOnly ? undefined : renamePlayer}
+          onToggleSign={readOnly ? undefined : toggleSign}
         />
         {game.rounds.length === 0 && (
-          <p className="empty">No rounds yet. Add the first round to begin.</p>
+          <p className="empty">
+            {isViewer
+              ? "No rounds played yet."
+              : "No rounds yet. Add the first round to begin."}
+          </p>
         )}
       </div>
 
-      {showTimer && !finished && <Stopwatch />}
+      {showTimer && !readOnly && <Stopwatch />}
 
       <div className="play-actions">
-        {finished ? (
+        {isViewer ? (
+          <button className="btn btn-primary btn-block" onClick={onFork}>
+            Copy to a new game
+          </button>
+        ) : finished ? (
           <div className="action-row">
             <button className="btn btn-ghost" onClick={continueGame}>
               Continue

@@ -57,10 +57,15 @@ start a game.
 - Resume the in-progress game on reopen.
 - **New game** (with confirm if a game is in progress).
 - A list of past games to revisit or delete; most recently edited first, each
-  showing players, round count, and a relative "edited" time.
+  showing players, round count, relative "edited" time, and a "view only" tag
+  for shared copies.
+- **Rename** a game by tapping its title (and a player by tapping their name).
 - **End game** — locks the game read-only and shows full **ranked standings**
   (🥇/🥈/🥉 then numbers; ties share a rank). **Continue** reopens it for
   editing; **Rematch** starts a fresh game with the same players and winner rule.
+- **Copy to a new game** — duplicate any game into a fresh, independent editable
+  game ("… (copy)"); the main use is turning a view-only shared copy into one
+  you keep.
 - A **"new version available" prompt** offers a one-tap reload when a new build
   is deployed (the service worker uses prompt mode, not silent auto-update).
 
@@ -70,26 +75,32 @@ start a game.
 - Fully manual and **not** part of the saved game — it's a scratch timer and
   resets on reload. Not tied to players or rounds.
 
-### Share (read-only) — shipped
-- From a game, **Share read-only link**: the game state (scores + note) is
-  lz-string-compressed into the URL hash (`#g=…`) — no backend, the data rides
-  in the link itself.
+### Share (view-only) + copy — shipped
+- Links are **always view-only**. **Share read-only link** lz-string-compresses
+  the game state (id, version, scores, note, finished) into the URL hash
+  (`#g=…`) — no backend, the data rides in the link itself.
 - A share dialog shows a **QR code** (so a friend can scan it at the table) plus
-  copy / native-share buttons.
-- Opening the link shows a **read-only snapshot** view (no editing), with a
-  badge and a note that it won't update live — re-share for the latest.
-- The note length is **fitted to an ~800-byte URL budget** (`MAX_SHARE_URL`):
-  the scores are encoded first, the note gets the remaining budget (binary
-  search over the compressed size). Above that budget the dialog hides the QR
-  and offers the link instead. The full note stays on-device.
+  copy / native-share buttons. The note length is **fitted to an ~800-byte URL
+  budget** (`MAX_SHARE_URL`): scores are encoded first, the note gets the
+  remainder (binary search over the compressed size); past the budget the QR is
+  hidden and the link offered. The full note stays on-device.
+- Opening a link **saves a view-only copy** into the recipient's games list
+  (matched by game **id**) and shows it read-only, with a "view only" tag.
+- **Updates by re-sharing**: opening a newer link (higher **version**) for a
+  game you already hold refreshes your view-only copy. A stale/older link is
+  ignored; a game you keep yourself is never overwritten.
+- **No in-place handoff** (it was too fragile without a server). To take over
+  scoring or fix a mistake, **Copy to a new game** forks the view-only copy
+  into your own independent editable game. Watchers don't auto-follow a fork —
+  the new keeper shares fresh links. See "Deferred" below.
 
 ## Screens
 
 1. **Home** — resume current game, start a new one, or reopen/delete past games.
 2. **New game** — name, winner rule, players.
 3. **Scoreboard** — the grid; add round, edit cells, see totals & leader;
-   share, end/continue, optional stopwatch.
-4. **Shared view** — read-only snapshot opened from a share link.
+   share, end/continue, stopwatch. Shared (view-only) copies open here too,
+   read-only, with a "Copy to a new game" action.
 
 ## Data model (localStorage)
 
@@ -101,14 +112,18 @@ Game {
   players: { id, name }[]
   rounds: { id, scores: { [playerId]: number | null } }[]
   notes: string                // free-form per-game note
+  role: "keeper" | "viewer"    // editable, or a view-only shared copy
+  version: number              // bumped on each edit; decides "newer" link
   finished: boolean            // ended -> read-only
   createdAt, updatedAt
 }
 ```
 
-A share link encodes a compact, UUID-free copy of one game (name, rule,
-player names, a rounds×players score matrix, and a budget-fitted note),
-lz-string-compressed into the URL hash; it is not stored server-side.
+A share link encodes a compact copy of one game (id, version, name, rule,
+player names, a rounds×players score matrix, a budget-fitted note, finished),
+lz-string-compressed into the URL hash; it is not stored server-side. Opening
+it saves a `viewer` copy keyed by `id`; re-opening a higher-`version` link
+refreshes it.
 
 Store the current game under a known key; keep a list of saved games.
 
@@ -136,7 +151,13 @@ Store the current game under a known key; keep a list of saved games.
   play, where one scorekeeper with one phone is the norm; full sync would add a
   backend, accounts, a privacy shift (data leaving the device), and
   offline-reconciliation complexity — high permanent cost for a small,
-  occasional benefit. The **read-only share link + QR** (above) covers the most
-  likely real want ("let everyone watch the scores") at a fraction of the cost,
-  with no backend. Revisit only if shared *editing* becomes a felt need; a
-  realtime BaaS (Supabase / Firebase) with last-write-wins would be the path.
+  occasional benefit. The **view-only share link + QR + copy** (above) covers
+  the likely real wants ("let everyone watch" and "let someone else take over")
+  at a fraction of the cost, with no backend.
+- **Link-based handoff of a live game** (move the score-keeper role between
+  devices for the *same* game id). This was prototyped and **removed** — without
+  a server you can't enforce a single writer, so it diverged in confusing,
+  hard-to-diagnose ways. Replaced by the simpler rule: links are view-only, and
+  taking over means **forking a copy** (a new game id). Revisit only if true
+  shared *editing* becomes a felt need; a realtime BaaS (Supabase / Firebase)
+  would be the honest path then.

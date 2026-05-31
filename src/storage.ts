@@ -15,7 +15,14 @@ export function loadGames(): Game[] {
     const raw = localStorage.getItem(GAMES_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as Game[];
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    // Migrate games saved before role/version/notes existed.
+    return parsed.map((g) => ({
+      ...g,
+      notes: g.notes ?? "",
+      role: g.role ?? "keeper",
+      version: g.version ?? 1,
+    }));
   } catch {
     return [];
   }
@@ -65,6 +72,8 @@ export function createGame(
     players,
     rounds: [],
     notes: "",
+    role: "keeper",
+    version: 1,
     createdAt: now,
     updatedAt: now,
     finished: false,

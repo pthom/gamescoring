@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Game } from "./types";
 import {
   createGame,
@@ -6,50 +6,54 @@ import {
   loadGames,
   saveCurrentId,
   saveGames,
+  uid,
 } from "./storage";
 import { Home } from "./components/Home";
 import { NewGame } from "./components/NewGame";
 import { Scoreboard } from "./components/Scoreboard";
-import { SharedView } from "./components/SharedView";
-import { readShareFromLocation, type SharedGame } from "./share";
+import {
+  readShareFromLocation,
+  sharedToGame,
+  type SharedGame,
+} from "./share";
 
 type View = { name: "home" } | { name: "new" } | { name: "play"; id: string };
+
+function clearShareHash() {
+  history.replaceState(null, "", location.pathname + location.search);
+}
 
 export default function App() {
   const [games, setGames] = useState<Game[]>(() => loadGames());
   const [currentId, setCurrentId] = useState<string | null>(() =>
     loadCurrentId()
   );
-  const [shared, setShared] = useState<SharedGame | null>(() =>
-    readShareFromLocation()
-  );
   const [view, setView] = useState<View>(() =>
     loadCurrentId() ? { name: "play", id: loadCurrentId()! } : { name: "home" }
   );
 
+  // Always-fresh games for reconciliation from event handlers.
+  const gamesRef = useRef(games);
+  gamesRef.current = games;
+
   useEffect(() => saveGames(games), [games]);
   useEffect(() => saveCurrentId(currentId), [currentId]);
 
-  // A scanned link may land on an already-open tab/PWA, which only changes the
-  // hash (no reload). Re-read it so the shared game shows without a manual reload.
-  useEffect(() => {
-    function onHashChange() {
-      const s = readShareFromLocation();
-      if (s) setShared(s);
-    }
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
-
-  function upsertGame(updated: Game) {
-    updated.updatedAt = Date.now();
+  /** Save a game as-is (no version bump) — create / import / role change. */
+  function putGame(g: Game) {
+    const saved = { ...g, updatedAt: Date.now() };
     setGames((prev) => {
-      const i = prev.findIndex((g) => g.id === updated.id);
-      if (i === -1) return [updated, ...prev];
+      const i = prev.findIndex((x) => x.id === saved.id);
+      if (i === -1) return [saved, ...prev];
       const next = [...prev];
-      next[i] = updated;
+      next[i] = saved;
       return next;
     });
+  }
+
+  /** Keeper content edit — bumps the version so re-shares read as newer. */
+  function editGame(g: Game) {
+    putGame({ ...g, version: g.version + 1 });
   }
 
   function handleStart(
@@ -58,7 +62,7 @@ export default function App() {
     players: string[]
   ) {
     const game = createGame(name, rule, players);
-    upsertGame(game);
+    putGame(game);
     setCurrentId(game.id);
     setView({ name: "play", id: game.id });
   }
@@ -80,40 +84,81 @@ export default function App() {
       from.winnerRule,
       from.players.map((p) => p.name)
     );
-    upsertGame(fresh);
+    putGame(fresh);
     setCurrentId(fresh.id);
     setView({ name: "play", id: fresh.id });
   }
 
-  if (shared) {
-    return (
-      <SharedView
-        game={shared}
-        onExit={() => {
-          history.replaceState(null, "", location.pathname + location.search);
-          setShared(null);
-          setView({ name: "home" });
-        }}
-      />
-    );
+  /** Fork a game into a brand-new, independent editable game (a "copy"). */
+  function forkGame(from: Game) {
+    const now = Date.now();
+    const fresh: Game = {
+      id: uid(),
+      name: `${from.name || "Game"} (copy)`,
+      winnerRule: from.winnerRule,
+      players: from.players.map((p) => ({ ...p })),
+      rounds: from.rounds.map((r) => ({ id: uid(), scores: { ...r.scores } })),
+      notes: from.notes,
+      role: "keeper",
+      version: 1,
+      createdAt: now,
+      updatedAt: now,
+      finished: false,
+    };
+    putGame(fresh);
+    setCurrentId(fresh.id);
+    setView({ name: "play", id: fresh.id });
   }
 
+  /** Reconcile an opened (view-only) share link into the local database.
+   *  Links are always view-only; a viewer copy refreshes only to a newer
+   *  version. A game you keep (your own id) just opens — never overwritten. */
+  function receiveShared(shared: SharedGame) {
+    const existing = gamesRef.current.find((g) => g.id === shared.id);
+    if (!existing) {
+      putGame(sharedToGame(shared, "viewer"));
+    } else if (existing.role === "viewer" && shared.version > existing.version) {
+      putGame(sharedToGame(shared, "viewer", existing));
+    }
+    setCurrentId(shared.id);
+    setView({ name: "play", id: shared.id });
+    clearShareHash();
+  }
+
+  // Process a share link on first load and whenever the hash changes (a scanned
+  // link can land on an already-open tab/PWA without a reload).
+  const receiveRef = useRef(receiveShared);
+  receiveRef.current = receiveShared;
+  useEffect(() => {
+    const handle = () => {
+      const s = readShareFromLocation();
+      if (s) receiveRef.current(s);
+    };
+    handle();
+    window.addEventListener("hashchange", handle);
+    return () => window.removeEventListener("hashchange", handle);
+  }, []);
+
   if (view.name === "new") {
-    return <NewGame onStart={handleStart} onCancel={() => setView({ name: "home" })} />;
+    return (
+      <NewGame onStart={handleStart} onCancel={() => setView({ name: "home" })} />
+    );
   }
 
   if (view.name === "play") {
     const game = games.find((g) => g.id === view.id);
-    if (!game) return <Home games={games} onNew={() => setView({ name: "new" })} onOpen={openGame} onDelete={handleDelete} />;
-    return (
-      <Scoreboard
-        game={game}
-        onChange={upsertGame}
-        onDelete={() => handleDelete(game.id)}
-        onHome={() => setView({ name: "home" })}
-        onRematch={() => handleRematch(game)}
-      />
-    );
+    if (game) {
+      return (
+        <Scoreboard
+          game={game}
+          onChange={editGame}
+          onDelete={() => handleDelete(game.id)}
+          onHome={() => setView({ name: "home" })}
+          onRematch={() => handleRematch(game)}
+          onFork={() => forkGame(game)}
+        />
+      );
+    }
   }
 
   return (

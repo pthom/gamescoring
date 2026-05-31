@@ -1,28 +1,34 @@
 import LZString from "lz-string";
-import type { Game, WinnerRule } from "./types";
+import type { Game, Role, WinnerRule } from "./types";
 
 /** Target ceiling for the whole share URL (chars ≈ bytes; the code is ASCII).
  *  Keeps the QR comfortably scannable; the note is trimmed to fit within it. */
 export const MAX_SHARE_URL = 800;
 
-/** A decoded, read-only game reconstructed from a share link. */
+/** A decoded game reconstructed from a share link. */
 export interface SharedGame {
+  id: string;
   name: string;
   winnerRule: WinnerRule;
   players: { id: string; name: string }[];
   rounds: { id: string; scores: Record<string, number | null> }[];
   notes: string;
+  finished: boolean;
+  version: number;
   sharedAt: number | null;
 }
 
-/** Compact wire format — no UUIDs, scores as a rounds×players matrix. */
+/** Compact wire format — no per-player/round UUIDs; scores as a matrix. */
 interface Payload {
   v: 1;
+  i: string; // game id
+  w: number; // game version
   n: string;
   r: "h" | "l";
   p: string[];
   s: (number | null)[][];
   c?: string; // game note (length fitted to the URL budget)
+  f?: 1; // finished
   t: number;
 }
 
@@ -41,9 +47,14 @@ function truncate(note: string, k: number): string {
 }
 
 /** Encode a game (with an explicit note) to a compressed, URL-safe code. */
-export function encodeGame(game: Game, note: string = game.notes ?? ""): string {
+export function encodeGame(
+  game: Game,
+  note: string = game.notes ?? ""
+): string {
   const payload: Payload = {
     v: 1,
+    i: game.id,
+    w: game.version,
     n: game.name,
     r: game.winnerRule === "lowest" ? "l" : "h",
     p: game.players.map((p) => p.name),
@@ -51,6 +62,7 @@ export function encodeGame(game: Game, note: string = game.notes ?? ""): string 
       game.players.map((p) => round.scores[p.id] ?? null)
     ),
     ...(note ? { c: note } : {}),
+    ...(game.finished ? { f: 1 as const } : {}),
     t: Date.now(),
   };
   return LZString.compressToEncodedURIComponent(JSON.stringify(payload));
@@ -61,7 +73,7 @@ export function encodeGame(game: Game, note: string = game.notes ?? ""): string 
 function fitNote(game: Game, fullNote: string, codeBudget: number): string {
   if (!fullNote) return "";
   if (encodeGame(game, fullNote).length <= codeBudget) return fullNote;
-  if (encodeGame(game, "").length >= codeBudget) return ""; // scores alone over budget
+  if (encodeGame(game, "").length >= codeBudget) return "";
   let lo = 0;
   let hi = fullNote.length;
   let best = 0;
@@ -114,12 +126,37 @@ export function decodeShare(code: string): SharedGame | null {
   });
 
   return {
+    id: typeof p.i === "string" ? p.i : `legacy-${p.t ?? 0}`,
     name: typeof p.n === "string" ? p.n : "",
     winnerRule: p.r === "l" ? "lowest" : "highest",
     players,
     rounds,
     notes: typeof p.c === "string" ? p.c : "",
+    finished: p.f === 1,
+    version: typeof p.w === "number" ? p.w : 1,
     sharedAt: typeof p.t === "number" ? p.t : null,
+  };
+}
+
+/** Build a storable Game from a decoded shared game, with a given role. */
+export function sharedToGame(
+  shared: SharedGame,
+  role: Role,
+  existing?: Game
+): Game {
+  const now = Date.now();
+  return {
+    id: shared.id,
+    name: shared.name,
+    winnerRule: shared.winnerRule,
+    players: shared.players,
+    rounds: shared.rounds,
+    notes: shared.notes,
+    role,
+    version: shared.version,
+    finished: shared.finished,
+    createdAt: existing?.createdAt ?? now,
+    updatedAt: now,
   };
 }
 

@@ -15,6 +15,7 @@ function summary(game: Game): string {
   const rounds = game.rounds.length;
   const parts = [names, `${rounds} round${rounds === 1 ? "" : "s"}`];
   parts.push(relativeTime(game.updatedAt));
+  if (game.role === "viewer") parts.push("view only");
   if (game.finished) parts.push("ended");
   return parts.join(" · ");
 }

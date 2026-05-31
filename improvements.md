@@ -15,3 +15,8 @@ When sharing a game link, it would be nice if it was saved inside the receiving 
 
 # Share link to "installed app": 
 When opening a share link, if the app is installed, it would be nice if it opened the app instead of the browser. This way the user would have a better experience and could easily save the game to their database. Not sure if this is possible with a PWA.
+
+# Copy link:
+
+At the moment the copy link button opens a dialogue where you can manually copy the text. It would be better if it placed it inside the clipboard automatically. 
+

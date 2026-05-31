@@ -94,6 +94,30 @@ body {
 .bar-spacer {
   width: 56px;
 }
+.bar-title-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+}
+.bar-title-btn:disabled {
+  cursor: default;
+}
+.title-input {
+  flex: 1;
+  min-width: 0;
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 18px;
+  text-align: center;
+  padding: 6px 10px;
+}
+.title-input:focus {
+  outline: none;
+}
 .link {
   background: none;
   border: none;
