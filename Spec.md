@@ -39,13 +39,18 @@ start a game.
 ### Play / scoreboard
 - Grid: one column per player, one row per round, a **Totals** row at the top
   or bottom (always visible).
-- "Add round" appends a new row; enter each player's points (numeric keypad).
-- Negative numbers allowed (some card games subtract).
+- "Add round" appends a new row (auto-focused) and enters each player's points
+  (numeric keypad).
+- Negative numbers allowed (some card games subtract); a **±** button on the
+  focused cell flips its sign without dismissing the keypad.
 - Blank entries count as 0.
 - Edit any past cell to fix a mistake — totals recompute.
 - Delete a round (with confirm).
+- Rename a player by tapping their name in the header.
 - Leader highlighted per the winner rule; ties shown as tied.
-- Horizontal scroll if there are many players; player names stay readable.
+- Header row and round-number column stay pinned; horizontal scroll if there
+  are many players.
+- Optional free-form **note** per game (house rules / context).
 
 ### Game management
 - **Save** automatically and continuously to the device (localStorage).
@@ -53,9 +58,11 @@ start a game.
 - **New game** (with confirm if a game is in progress).
 - A list of past games to revisit or delete; most recently edited first, each
   showing players, round count, and a relative "edited" time.
-- **End game** — locks the game read-only and shows a winner (or tie) banner.
-  **Continue** reopens it for editing; **Rematch** starts a fresh game with the
-  same players and winner rule.
+- **End game** — locks the game read-only and shows full **ranked standings**
+  (🥇/🥈/🥉 then numbers; ties share a rank). **Continue** reopens it for
+  editing; **Rematch** starts a fresh game with the same players and winner rule.
+- A **"new version available" prompt** offers a one-tap reload when a new build
+  is deployed (the service worker uses prompt mode, not silent auto-update).
 
 ### Turn stopwatch — shipped
 - An **optional**, hideable mm:ss stopwatch (start / pause / reset) for timing a
@@ -64,14 +71,17 @@ start a game.
   resets on reload. Not tied to players or rounds.
 
 ### Share (read-only) — shipped
-- From a game, **Share read-only link**: the full game state is encoded into
-  the URL hash (`#g=…`) — no backend, the data rides in the link itself.
+- From a game, **Share read-only link**: the game state (scores + note) is
+  lz-string-compressed into the URL hash (`#g=…`) — no backend, the data rides
+  in the link itself.
 - A share dialog shows a **QR code** (so a friend can scan it at the table) plus
   copy / native-share buttons.
 - Opening the link shows a **read-only snapshot** view (no editing), with a
   badge and a note that it won't update live — re-share for the latest.
-- For very large games the link can exceed a scannable QR; above ~1200 chars
-  the dialog hides the QR and offers the link instead.
+- The note length is **fitted to an ~800-byte URL budget** (`MAX_SHARE_URL`):
+  the scores are encoded first, the note gets the remaining budget (binary
+  search over the compressed size). Above that budget the dialog hides the QR
+  and offers the link instead. The full note stays on-device.
 
 ## Screens
 
@@ -90,14 +100,15 @@ Game {
   winnerRule: "highest" | "lowest"
   players: { id, name }[]
   rounds: { id, scores: { [playerId]: number | null } }[]
+  notes: string                // free-form per-game note
   finished: boolean            // ended -> read-only
   createdAt, updatedAt
 }
 ```
 
 A share link encodes a compact, UUID-free copy of one game (name, rule,
-player names, and a rounds×players score matrix) into the URL hash; it is not
-stored server-side.
+player names, a rounds×players score matrix, and a budget-fitted note),
+lz-string-compressed into the URL hash; it is not stored server-side.
 
 Store the current game under a known key; keep a list of saved games.
 
