@@ -17,6 +17,8 @@ export interface Game {
   winnerRule: WinnerRule;
   players: Player[];
   rounds: Round[];
+  /** Free-form note for the whole game (house rules, context, etc.). */
+  notes: string;
   createdAt: number;
   updatedAt: number;
   finished: boolean;

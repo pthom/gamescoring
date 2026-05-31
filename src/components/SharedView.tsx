@@ -37,6 +37,8 @@ export function SharedView({ game, onExit }: Props) {
         Ask for a fresh link to see the latest.
       </div>
 
+      {game.notes && <div className="shared-note">📝 {game.notes}</div>}
+
       <div className="grid-wrap">
         <ScoreGrid
           players={game.players}

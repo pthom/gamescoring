@@ -64,6 +64,7 @@ export function createGame(
     winnerRule,
     players,
     rounds: [],
+    notes: "",
     createdAt: now,
     updatedAt: now,
     finished: false,

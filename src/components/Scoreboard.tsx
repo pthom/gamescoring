@@ -6,6 +6,7 @@ import { buildShareUrl } from "../share";
 import { ScoreGrid } from "./ScoreGrid";
 import { ShareDialog } from "./ShareDialog";
 import { Stopwatch } from "./Stopwatch";
+import { NotesDialog } from "./NotesDialog";
 
 interface Props {
   game: Game;
@@ -24,6 +25,7 @@ export function Scoreboard({
 }: Props) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [notesOpen, setNotesOpen] = useState(false);
   const [showTimer, setShowTimer] = useState(() => loadTimerVisible());
   const gridWrap = useRef<HTMLDivElement>(null);
   const justAdded = useRef(false);
@@ -153,6 +155,15 @@ export function Scoreboard({
             <button className="menu-item" onClick={openShare}>
               Share read-only link
             </button>
+            <button
+              className="menu-item"
+              onClick={() => {
+                setMenuOpen(false);
+                setNotesOpen(true);
+              }}
+            >
+              {game.notes ? "Edit notes" : "Add notes"}
+            </button>
             {!finished && (
               <button className="menu-item" onClick={toggleTimer}>
                 {showTimer ? "Hide timer" : "Show timer"}
@@ -174,6 +185,12 @@ export function Scoreboard({
             </button>
           </div>
         </div>
+      )}
+
+      {game.notes && (
+        <button className="game-note" onClick={() => setNotesOpen(true)}>
+          📝 {game.notes}
+        </button>
       )}
 
       {finished && (
@@ -231,6 +248,14 @@ export function Scoreboard({
           url={shareUrl}
           title={game.name || "Score Sheet"}
           onClose={() => setShareUrl(null)}
+        />
+      )}
+
+      {notesOpen && (
+        <NotesDialog
+          initial={game.notes ?? ""}
+          onSave={(text) => onChange({ ...game, notes: text })}
+          onClose={() => setNotesOpen(false)}
         />
       )}
     </div>

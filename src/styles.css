@@ -532,6 +532,41 @@ body {
   font-size: 18px;
 }
 
+/* game-level free-form note */
+.game-note {
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 12px;
+  margin-bottom: 12px;
+  color: var(--muted);
+  font-size: 13px;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.notes-input {
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  padding: 12px;
+  font: inherit;
+  font-size: 15px;
+  resize: vertical;
+  margin-bottom: 16px;
+}
+.notes-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 /* inline player rename in the grid header */
 .pname-btn {
   background: none;
@@ -644,6 +679,18 @@ body {
   font-size: 18px;
   font-weight: 600;
   padding: 14px 6px;
+}
+.shared-note {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  font-size: 14px;
+  font-style: italic;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 /* ---------- Share dialog ---------- */

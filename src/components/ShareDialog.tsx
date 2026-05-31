@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-
-/** Above this URL length the QR gets too dense to scan reliably on a phone. */
-const QR_MAX = 1200;
+import { MAX_SHARE_URL } from "../share";
 
 interface Props {
   url: string;
@@ -13,7 +11,7 @@ interface Props {
 export function ShareDialog({ url, title, onClose }: Props) {
   const [copied, setCopied] = useState(false);
   const canShare = typeof navigator !== "undefined" && "share" in navigator;
-  const tooLong = url.length > QR_MAX;
+  const tooLong = url.length > MAX_SHARE_URL;
 
   async function copy() {
     try {
