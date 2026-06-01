@@ -18,5 +18,12 @@ When opening a share link, if the app is installed, it would be nice if it opene
 
 # Copy link:
 
-At the moment the copy link button opens a dialogue where you can manually copy the text. It would be better if it placed it inside the clipboard automatically. 
+At the moment the copy link button sometimes opens a dialogue where you can manually copy the text. It would be better if it placed it inside the clipboard automatically. Is it difficult? 
 
+
+# Concerning the share links and handoff between score keepers and viewers
+
+It is too fragile, and fails in multiple / difficult to diagnose ways.
+Let's make simpler: 
+- A shared link is always view-only: it can be updated only by opening a new link / QR code for the same game.
+- If players want to handoff: a view-only game can be copied to a new game (asking for a new name?)

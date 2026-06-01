@@ -371,21 +371,21 @@ body {
   top: 0;
   z-index: 2;
   background: var(--surface-2);
-  padding: 10px 12px;
-  min-width: 84px;
+  padding: 8px 6px;
+  min-width: 52px;
 }
 .phead .pname {
   display: block;
-  font-size: 13px;
+  font-size: 11px;
   color: var(--muted);
   white-space: nowrap;
   font-weight: 600;
 }
 .phead .ptotal {
   display: block;
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 800;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 .phead.leader {
   background: var(--accent);
@@ -408,9 +408,9 @@ body {
   z-index: 1;
   background: var(--surface-2);
   color: var(--muted);
-  font-size: 13px;
-  width: 36px;
-  min-width: 36px;
+  font-size: 11px;
+  width: 26px;
+  min-width: 26px;
 }
 .corner {
   top: 0;
@@ -423,16 +423,16 @@ body {
 }
 .sign-btn {
   position: absolute;
-  left: 4px;
+  left: 2px;
   top: 50%;
   transform: translateY(-50%);
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   border: none;
-  border-radius: 7px;
+  border-radius: 6px;
   background: var(--surface-2);
   color: var(--accent);
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 800;
   line-height: 1;
   display: flex;
@@ -443,14 +443,14 @@ body {
 }
 .score-input {
   width: 100%;
-  min-width: 64px;
+  min-width: 44px;
   border: none;
   background: transparent;
   color: var(--text);
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
   text-align: center;
-  padding: 14px 6px;
+  padding: 11px 2px;
 }
 .score-input:focus {
   outline: none;
@@ -461,8 +461,8 @@ body {
 }
 
 .rowtools {
-  width: 40px;
-  min-width: 40px;
+  width: 32px;
+  min-width: 32px;
 }
 
 .empty {
@@ -700,9 +700,9 @@ body {
 }
 .score-static {
   display: block;
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
-  padding: 14px 6px;
+  padding: 11px 2px;
 }
 .shared-note {
   background: var(--surface);
