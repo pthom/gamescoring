@@ -341,6 +341,24 @@ body {
 }
 
 /* ---------- Scoreboard grid ---------- */
+.grid-summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 8px 10px;
+}
+.grid-summary .gs-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+.grid-summary .gs-value {
+  font-size: 20px;
+  font-weight: 800;
+}
 .grid-wrap {
   flex: 1;
   min-height: 0; /* allow the flex item to shrink and scroll internally */

@@ -34,6 +34,7 @@ export function Scoreboard({
   const gridWrap = useRef<HTMLDivElement>(null);
   const justAdded = useRef(false);
   const totals = allTotals(game);
+  const grandTotal = Object.values(totals).reduce((a, b) => a + b, 0);
   const leaders = leaderIds(game);
   const finished = game.finished;
   const isViewer = game.role === "viewer";
@@ -261,6 +262,13 @@ export function Scoreboard({
             </li>
           ))}
         </ol>
+      )}
+
+      {game.rounds.length > 0 && (
+        <div className="grid-summary">
+          <span className="gs-label">Total points</span>
+          <span className="gs-value">{grandTotal}</span>
+        </div>
       )}
 
       <div className="grid-wrap" ref={gridWrap}>
