@@ -51,6 +51,29 @@ export function ScoreGrid({
     setEditingId(null);
   }
 
+  const fmtDelta = (v: number) => (v > 0 ? `+${v}` : `${v}`);
+
+  // Running (cumulative) total per player after each round. `played` stays
+  // false until the player has an actual score, so leading blanks stay blank.
+  const acc: Record<string, number> = {};
+  const seen: Record<string, boolean> = {};
+  for (const p of players) {
+    acc[p.id] = 0;
+    seen[p.id] = false;
+  }
+  const running = rounds.map((round) => {
+    const row: Record<string, { total: number; played: boolean }> = {};
+    for (const p of players) {
+      const v = round.scores[p.id];
+      if (v != null) {
+        acc[p.id] += v;
+        seen[p.id] = true;
+      }
+      row[p.id] = { total: acc[p.id], played: seen[p.id] };
+    }
+    return row;
+  });
+
   return (
     <table className="grid">
       <thead>
@@ -99,10 +122,12 @@ export function ScoreGrid({
             <td className="rnum">{i + 1}</td>
             {players.map((p) => {
               const key = `${round.id}:${p.id}`;
+              const delta = round.scores[p.id];
+              const cell = running[i][p.id];
               return (
                 <td key={p.id} className="cell">
                   {editable ? (
-                    <>
+                    <label className="cell-box">
                       {onToggleSign && focusedCell === key && (
                         <button
                           className="sign-btn"
@@ -114,8 +139,18 @@ export function ScoreGrid({
                           ±
                         </button>
                       )}
+                      {focusedCell !== key && delta != null && (
+                        <>
+                          <span className="cell-delta">{fmtDelta(delta)}</span>
+                          <span className="cell-total-ov">{cell.total}</span>
+                        </>
+                      )}
                       <input
-                        className="score-input"
+                        className={
+                          focusedCell !== key && delta != null
+                            ? "score-input ghost"
+                            : "score-input"
+                        }
                         type="text"
                         inputMode="numeric"
                         pattern="-?[0-9]*"
@@ -130,11 +165,16 @@ export function ScoreGrid({
                           setFocusedCell((c) => (c === key ? null : c))
                         }
                       />
-                    </>
+                    </label>
                   ) : (
-                    <span className="score-static">
-                      {round.scores[p.id] ?? "–"}
-                    </span>
+                    <div className="cell-box">
+                      {delta != null && (
+                        <span className="cell-delta">{fmtDelta(delta)}</span>
+                      )}
+                      <span className="score-static">
+                        {cell.played ? cell.total : "–"}
+                      </span>
+                    </div>
                   )}
                 </td>
               );
